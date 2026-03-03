@@ -1,0 +1,272 @@
+---
+import '../styles/global.css';
+import SEO from '../components/SEO.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { title, description, image } = Astro.props;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://ikebanapat.com/#person",
+      "name": "Ikebana Pat",
+      "jobTitle": "Productor Musical",
+      "url": "https://ikebanapat.com",
+      "sameAs": ["#", "#"],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Rivas-Vaciamadrid",
+        "addressRegion": "Madrid",
+        "addressCountry": "ES"
+      }
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://ikebanapat.com/#business",
+      "name": "IKEBANA PAT",
+      "description": "Producción musical con identidad en Madrid. Beats, grabación vocal y canciones completas.",
+      "url": "https://ikebanapat.com",
+      "telephone": "+34605454260",
+      "email": "info@ikebanapat.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Rivas-Vaciamadrid",
+        "addressRegion": "Madrid",
+        "addressCountry": "ES"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 40.3271,
+        "longitude": -3.5352
+      },
+      "priceRange": "$$",
+      "openingHours": "Mo-Fr 10:00-20:00"
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <SEO title={title} description={description} image={image} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos Globales y Variables CSS -->
+    <style is:global>
+      :root {
+        --bg: #08080a;
+        --bg-elevated: #0f0f14;
+        --fg: #f5f5f7;
+        --muted: #8b8b9e;
+        --accent: #a855f7;
+        --accent-dim: #7c3aed;
+        --accent-glow: rgba(168, 85, 247, 0.4);
+        --card: #121218;
+        --border: #1f1f28;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background-color: var(--bg);
+        background-image:
+          radial-gradient(ellipse 80% 60% at 50% -10%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
+          radial-gradient(ellipse 50% 40% at 85% 55%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+        background-attachment: fixed;
+        color: var(--fg);
+        overflow-x: hidden;
+      }
+
+      .font-display { font-family: 'Syne', sans-serif; }
+
+      /* Utilidades CSS reutilizables */
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+        color: white;
+        font-weight: 600;
+        padding: 1rem 2rem;
+        border-radius: 4px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        display: inline-block;
+        text-decoration: none;
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 40px var(--accent-glow);
+      }
+
+      .btn-secondary {
+        border: 1px solid var(--border);
+        color: var(--fg);
+        padding: 1rem 2rem;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        background: transparent;
+        display: inline-block;
+        text-decoration: none;
+      }
+      .btn-secondary:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(168, 85, 247, 0.05);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .reveal.visible { opacity: 1; transform: translateY(0); }
+      
+      /* Animaciones y texturas */
+      .noise-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 9999; opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      }
+      
+.price-tag {
+        font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.5rem;
+        color: var(--accent);
+      }
+      
+      .service-card, .testimonial-card {
+        background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .service-card:hover { transform: translateY(-8px); border-color: rgba(168, 85, 247, 0.3); }
+
+      .form-input {
+        background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+        padding: 1rem; color: var(--fg); width: 100%; transition: all 0.3s;
+      }
+      .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15); }
+
+      /* Mobile menu logic handled by CSS/JS mix */
+      .mobile-menu { transform: translateX(100%); transition: transform 0.3s ease; }
+      .mobile-menu.open { transform: translateX(0); }
+
+      /* Nav active state */
+      .nav-link.active { color: var(--fg) !important; }
+      .nav-link.active span { width: 100% !important; }
+
+      /* Global floating scroll-to-top */
+      .scroll-top {
+        position: fixed;
+        --scroll-top-inset: clamp(1rem, 3vw, 1.5rem);
+        right: calc(var(--scroll-top-inset) + env(safe-area-inset-right));
+        bottom: calc(var(--scroll-top-inset) + env(safe-area-inset-bottom));
+        z-index: 9998;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 9999px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        background: color-mix(in srgb, var(--card) 55%, transparent);
+        color: var(--fg);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity 180ms ease, transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+      }
+
+      .scroll-top.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+
+      .scroll-top:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--card) 85%, transparent);
+      }
+
+      .scroll-top:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+      }
+
+      .scroll-top svg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+
+      .scroll-top path {
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="noise-overlay" aria-hidden="true"></div>
+    <slot />
+
+    <button id="scrollTop" class="scroll-top" type="button" aria-label="Subir arriba" title="Subir arriba">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 15l6-6 6 6" />
+      </svg>
+    </button>
+    
+    <!-- Script global para interactividades ligeras (Navbar, Reveal) -->
+    <script>
+        // Intersection Observer para animaciones Reveal individuales
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(el => observer.observe(el));
+
+        // Global scroll-to-top button
+        const scrollTopBtn = document.getElementById('scrollTop');
+        const showAfter = 360;
+
+        const setScrollTopVisibility = () => {
+          if (!scrollTopBtn) return;
+          const y = window.scrollY || document.documentElement.scrollTop || 0;
+          scrollTopBtn.classList.toggle('is-visible', y > showAfter);
+        };
+
+        setScrollTopVisibility();
+        window.addEventListener('scroll', setScrollTopVisibility, { passive: true });
+
+        scrollTopBtn?.addEventListener('click', () => {
+          const hero = document.getElementById('inicio');
+          if (hero) {
+            hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SONORA Studio | Alquiler por Horas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --bg-elevated: #141414;
+            --fg: #f5f5f5;
+            --muted: #737373;
+            --accent: #e8a849;
+            --accent-dim: #c4893a;
+            --card: #1a1a1a;
+            --border: #2a2a2a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* Noise texture overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Hero background */
+        .hero-bg {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232, 168, 73, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(232, 168, 73, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg-elevated) 100%);
+        }
+
+        /* Glow effects */
+        .accent-glow {
+            box-shadow: 0 0 60px rgba(232, 168, 73, 0.3), 0 0 120px rgba(232, 168, 73, 0.1);
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            color: var(--bg);
+            font-weight: 600;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(232, 168, 73, 0.4);
+        }
+
+        .btn-primary:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .btn-secondary {
+            border: 1px solid var(--border);
+            color: var(--fg);
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(232, 168, 73, 0.05);
+        }
+
+        .btn-secondary:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        /* Card styles */
+        .service-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(232, 168, 73, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Waveform animation */
+        .waveform {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 40px;
+        }
+
+        .waveform span {
+            width: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            animation: wave 1.2s ease-in-out infinite;
+        }
+
+        .waveform span:nth-child(1) { animation-delay: 0s; height: 20%; }
+        .waveform span:nth-child(2) { animation-delay: 0.1s; height: 40%; }
+        .waveform span:nth-child(3) { animation-delay: 0.2s; height: 60%; }
+        .waveform span:nth-child(4) { animation-delay: 0.3s; height: 80%; }
+        .waveform span:nth-child(5) { animation-delay: 0.4s; height: 100%; }
+        .waveform span:nth-child(6) { animation-delay: 0.5s; height: 80%; }
+        .waveform span:nth-child(7) { animation-delay: 0.6s; height: 60%; }
+        .waveform span:nth-child(8) { animation-delay: 0.7s; height: 40%; }
+        .waveform span:nth-child(9) { animation-delay: 0.8s; height: 20%; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1); }
+        }
+
+        /* Gallery */
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .gallery-item img {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* Form inputs */
+        .form-input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem;
+            color: var(--fg);
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(232, 168, 73, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--muted);
+        }
+
+        /* Testimonial */
+        .testimonial-card {
+            background: linear-gradient(135deg, var(--card) 0%, rgba(26, 26, 26, 0.5) 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        /* Nav link */
+        .nav-link {
+            position: relative;
+            color: var(--muted);
+            transition: color 0.3s;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--fg);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Price tag */
+        .price-tag {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.5rem;
+            color: var(--accent);
+        }
+
+        /* Section divider */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
+        /* Floating elements */
+        .float-element {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="#" class="font-display text-2xl font-bold tracking-tight">
+                    SONORA<span class="text-[var(--accent)]">.</span>
+                </a>
+                
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#servicios" class="nav-link text-sm uppercase tracking-wider">Servicios</a>
+                    <a href="#productor" class="nav-link text-sm uppercase tracking-wider">Productor</a>
+                    <a href="#estudio" class="nav-link text-sm uppercase tracking-wider">Estudio</a>
+                    <a href="#contacto" class="nav-link text-sm uppercase tracking-wider">Contacto</a>
+                    <a href="#contacto" class="btn-primary text-sm">Reservar</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="menuBtn" class="md:hidden p-2" aria-label="Abrir menú">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu fixed inset-0 z-50 bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center gap-8">
+        <button id="closeMenu" class="absolute top-6 right-6 p-2" aria-label="Cerrar menú">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <a href="#servicios" class="font-display text-3xl font-bold mobile-link">Servicios</a>
+        <a href="#productor" class="font-display text-3xl font-bold mobile-link">Productor</a>
+        <a href="#estudio" class="font-display text-3xl font-bold mobile-link">Estudio</a>
+        <a href="#contacto" class="font-display text-3xl font-bold mobile-link">Contacto</a>
+        <a href="#contacto" class="btn-primary text-lg mt-4">Reservar Ahora</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-bg min-h-screen flex items-center relative overflow-hidden">
+        <!-- Background decorative elements -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 -left-20 w-96 h-96 bg-[var(--accent)]/5 rounded-full blur-3xl float-element"></div>
+            <div class="absolute bottom-1/4 -right-20 w-80 h-80 bg-[var(--accent)]/8 rounded-full blur-3xl float-element" style="animation-delay: -3s;"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 py-32 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="space-y-8">
+                    <div class="reveal">
+                        <span class="inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Estudio Profesional</span>
+                        <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-800 leading-[0.95] tracking-tight">
+                            Tu sonido,<br>
+                            <span class="text-[var(--accent)]">nuestro espacio</span>
+                        </h1>
+                    </div>
+                    
+                    <p class="reveal reveal-delay-1 text-lg md:text-xl text-[var(--muted)] max-w-xl leading-relaxed">
+                        Estudio de grabación profesional en el corazón de la ciudad. 
+                        Alquila por horas y lleva tu música al siguiente nivel con equipos de clase mundial.
+                    </p>
+
+                    <div class="reveal reveal-delay-2 flex flex-wrap gap-4">
+                        <a href="#contacto" class="btn-primary text-base">
+                            Reservar Hora Ahora
+                        </a>
+                        <a href="#estudio" class="btn-secondary text-base">
+                            Ver Estudio
+                        </a>
+                    </div>
+
+                    <div class="reveal reveal-delay-3 flex items-center gap-8 pt-4">
+                        <div>
+                            <span class="font-display text-3xl font-bold text-[var(--accent)]">12+</span>
+                            <p class="text-sm text-[var(--muted)]">Años de experiencia</p>
+                        </div>
+                        <div class="w-px h-12 bg-[var(--border)]"></div>
+                        <div>
+                            <span class="font-display text-3xl font-bold text-[var(--accent)]">500+</span>
+                            <p class="text-sm text-[var(--muted)]">Proyectos completados</p>
+                        </div>
+                        <div class="w-px h-12 bg-[var(--border)]"></div>
+                        <div>
+                            <span class="font-display text-3xl font-bold text-[var(--accent)]">24/7</span>
+                            <p class="text-sm text-[var(--muted)]">Disponibilidad</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="reveal reveal-delay-2 relative hidden lg:block">
+                    <div class="relative">
+                        <!-- Main image placeholder -->
+                        <div class="aspect-[4/5] bg-gradient-to-br from-[var(--card)] to-[var(--bg)] rounded-lg overflow-hidden border border-[var(--border)] relative">
+                            <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 500" fill="none">
+                                <!-- Studio illustration -->
+                                <rect x="50" y="100" width="300" height="300" rx="8" stroke="var(--accent)" stroke-width="1"/>
+                                <circle cx="200" cy="250" r="80" stroke="var(--accent)" stroke-width="1"/>
+                                <circle cx="200" cy="250" r="40" stroke="var(--accent)" stroke-width="1"/>
+                                <rect x="100" y="380" width="200" height="20" rx="2" fill="var(--accent)" opacity="0.3"/>
+                                <!-- Faders -->
+                                <rect x="120" y="420" width="4" height="40" rx="2" fill="var(--accent)"/>
+                                <rect x="140" y="430" width="4" height="30" rx="2" fill="var(--accent)"/>
+                                <rect x="160" y="415" width="4" height="45" rx="2" fill="var(--accent)"/>
+                                <rect x="180" y="425" width="4" height="35" rx="2" fill="var(--accent)"/>
+                                <rect x="200" y="410" width="4" height="50" rx="2" fill="var(--accent)"/>
+                                <rect x="220" y="428" width="4" height="32" rx="2" fill="var(--accent)"/>
+                                <rect x="240" y="418" width="4" height="42" rx="2" fill="var(--accent)"/>
+                                <rect x="260" y="432" width="4" height="28" rx="2" fill="var(--accent)"/>
+                            </svg>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        </div>
+                        
+                        <!-- Floating waveform card -->
+                        <div class="absolute -bottom-6 -left-6 bg-[var(--card)] border border-[var(--border)] rounded-lg p-4 shadow-2xl">
+                            <div class="waveform">
+                                <span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <p class="text-xs text-[var(--muted)] mt-2">Grabando ahora...</p>
+                        </div>
+
+                        <!-- Accent glow -->
+                        <div class="absolute -inset-4 bg-[var(--accent)]/10 rounded-2xl blur-3xl -z-10"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[var(--muted)]">
+            <span class="text-xs uppercase tracking-wider">Scroll</span>
+            <div class="w-px h-12 bg-gradient-to-b from-[var(--accent)] to-transparent animate-pulse"></div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="servicios" class="py-32 relative">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <span class="reveal inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Nuestros Servicios</span>
+                <h2 class="reveal reveal-delay-1 font-display text-4xl md:text-6xl font-bold">Modalidades de Alquiler</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Service 1 -->
+                <div class="reveal service-card group">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+                                <path d="M12 18.5A6.5 6.5 0 1 0 12 5.5a6.5 6.5 0 0 0 0 13Z"/>
+                                <path d="M12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                                <path d="M12 2v2m0 16v2M2 12h2m16 0h2"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs uppercase tracking-wider text-[var(--muted)] bg-[var(--bg)] px-3 py-1 rounded-full">Autogestionado</span>
+                    </div>
+                    
+                    <h3 class="font-display text-2xl font-bold mb-3">Sin Productor</h3>
+                    <p class="text-[var(--muted)] mb-6 leading-relaxed">
+                        Acceso completo al estudio, equipos e instrumentos. Ideal para artistas que ya tienen su flujo de trabajo definido.
+                    </p>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-3 text-sm">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                            </svg>
+                            Cabina acústica profesional
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                            </svg>
+                            DAW y plugins incluidos
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                            </svg>
+                            Instrumentos disponibles
+                        </li>
+                    </ul>
+
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <span class="price-tag">25€</span>
+                            <span class="text-[var(--muted)]">/hora</span>
+                        </div>
+                        <a href="#contacto" class="btn-secondary text-sm py-2 px-4">Reservar</a>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="reveal reveal-delay-1 service-card group relative">
+                    <div class="absolute -top-3 right-6 bg-[var(--accent)] text-black text-xs font-bold px-3 py-1 rounded-full">
+                        Popular
+                    </div>
+                    
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="w-16 h-16 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+                                <path d="M16 4l2 2-2 2M8 4L6 6l2 2"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs uppercase tracking-wider text-[var(--muted)] bg-[var(--bg)] px-3 py-1 rounded-full">Asistido</span>
+                    </div>
+                    
+                    <h3 class="font-display text-2xl font-bold mb-3">Con Productor</h3>
+                    <p class="text-[var(--muted)] mb-6 leading-relaxed">
+                        Asistencia profesional completa. Grabación, mezcla y producción a cargo de nuestro productor certificado.
+                    </p>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-3 text-sm">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                            </svg>
+                            Todo del plan básico
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                            </svg>
+                            Producción musical
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                            </svg>
+                            Mezcla profesional
+                        </li>
+                    </ul>
+
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <span class="price-tag">50€</span>
+                            <span class="text-[var(--muted)]">/hora</span>
+                        </div>
+                        <a href="#contacto" class="btn-primary text-sm py-2 px-4">Reservar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- Producer Section -->
+    <section id="productor" class="py-32 relative overflow-hidden">
+        <!-- Background accent -->
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[var(--accent)]/5 to-transparent pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <!-- Producer Image -->
+                <div class="reveal relative">
+                    <div class="aspect-[3/4] bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] rounded-lg overflow-hidden border border-[var(--border)] relative">
+                        <!-- Placeholder illustration -->
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 300 400" fill="none">
+                            <rect x="0" y="0" width="300" height="400" fill="url(#producerGrad)"/>
+                            <circle cx="150" cy="120" r="60" fill="var(--card)" stroke="var(--accent)" stroke-width="1"/>
+                            <path d="M150 180 C 100 180 60 220 60 280 L 60 400 L 240 400 L 240 280 C 240 220 200 180 150 180" fill="var(--card)" stroke="var(--accent)" stroke-width="1"/>
+                            <!-- Headphones -->
+                            <ellipse cx="150" cy="120" rx="65" ry="50" stroke="var(--accent)" stroke-width="2" fill="none"/>
+                            <rect x="80" y="110" width="20" height="25" rx="4" fill="var(--accent)" opacity="0.3"/>
+                            <rect x="200" y="110" width="20" height="25" rx="4" fill="var(--accent)" opacity="0.3"/>
+                            <defs>
+                                <linearGradient id="producerGrad" x1="0" y1="0" x2="300" y2="400">
+                                    <stop offset="0%" stop-color="#1a1a1a"/>
+                                    <stop offset="100%" stop-color="#0a0a0a"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    </div>
+                    
+                    <!-- Stats card -->
+                    <div class="absolute -bottom-6 -right-6 bg-[var(--card)] border border-[var(--border)] rounded-lg p-5 shadow-2xl">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-[var(--accent)]/20 flex items-center justify-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--accent)">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="font-display text-2xl font-bold">4.9</span>
+                                <p class="text-xs text-[var(--muted)]">Rating promedio</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Glow effect -->
+                    <div class="absolute -inset-8 bg-[var(--accent)]/10 rounded-3xl blur-3xl -z-10"></div>
+                </div>
+
+                <!-- Producer Info -->
+                <div class="space-y-8">
+                    <div class="reveal">
+                        <span class="inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Tu Productor</span>
+                        <h2 class="font-display text-4xl md:text-5xl font-bold mb-2">Marcos Delgado</h2>
+                        <p class="text-[var(--muted)] text-lg">Productor Musical & Ingeniero de Sonido</p>
+                    </div>
+
+                    <div class="reveal reveal-delay-1 space-y-4">
+                        <p class="text-[var(--fg)] leading-relaxed">
+                            Con más de 12 años de experiencia en la industria musical, he trabajado con artistas de géneros tan diversos como hip-hop, rock, electrónica y pop. Mi objetivo es ayudarte a encontrar tu sonido único.
+                        </p>
+                        <p class="text-[var(--muted)] leading-relaxed">
+                            Certificado en Pro Tools y especializado en mezcla en Dolby Atmos. He colaborado con sellos discográficos internacionales y mi trabajo ha sonado en más de 50 millones de streams.
+                        </p>
+                    </div>
+
+                    <!-- Credentials -->
+                    <div class="reveal reveal-delay-2 grid grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-[var(--card)] rounded-lg border border-[var(--border)]">
+                            <span class="font-display text-2xl font-bold text-[var(--accent)]">200+</span>
+                            <p class="text-xs text-[var(--muted)] mt-1">Artistas</p>
+                        </div>
+                        <div class="text-center p-4 bg-[var(--card)] rounded-lg border border-[var(--border)]">
+                            <span class="font-display text-2xl font-bold text-[var(--accent)]">50M+</span>
+                            <p class="text-xs text-[var(--muted)] mt-1">Streams</p>
+                        </div>
+                        <div class="text-center p-4 bg-[var(--card)] rounded-lg border border-[var(--border)]">
+                            <span class="font-display text-2xl font-bold text-[var(--accent)]">3</span>
+                            <p class="text-xs text-[var(--muted)] mt-1">Nominaciones</p>
+                        </div>
+                    </div>
+
+                    <!-- Work Samples -->
+                    <div class="reveal reveal-delay-3">
+                        <h4 class="text-sm uppercase tracking-wider text-[var(--muted)] mb-4">Proyectos Destacados</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-4 p-3 bg-[var(--card)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors cursor-pointer group">
+                                <div class="w-12 h-12 rounded bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent)">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium truncate group-hover:text-[var(--accent)] transition-colors">Luna Negra - "Medianoche"</p>
+                                    <p class="text-xs text-[var(--muted)]">Producción & Mezcla - 2.3M streams</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 p-3 bg-[var(--card)] rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors cursor-pointer group">
+                                <div class="w-12 h-12 rounded bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent)">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium truncate group-hover:text-[var(--accent)] transition-colors">Los Silencios - "Eco"</p>
+                                    <p class="text-xs text-[var(--muted)]">Producción completa - 890K streams</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-24 bg-[var(--bg-elevated)]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="reveal inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Testimonios</span>
+                <h2 class="reveal reveal-delay-1 font-display text-3xl md:text-4xl font-bold">Lo que dicen nuestros clientes</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="reveal testimonial-card">
+                    <div class="flex items-center gap-1 mb-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <p class="text-[var(--fg)] mb-6 leading-relaxed">"Increíble experiencia. El estudio tiene todo lo que necesitas y Marcos es un genio. Mi EP nunca había sonado tan bien."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center text-[var(--accent)] font-bold">AL</div>
+                        <div>
+                            <p class="font-medium text-sm">Ana López</p>
+                            <p class="text-xs text-[var(--muted)]">Cantautora</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal reveal-delay-1 testimonial-card">
+                    <div class="flex items-center gap-1 mb-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <p class="text-[var(--fg)] mb-6 leading-relaxed">"Llevo grabando aquí 2 años. La atención, el equipo y el ambiente son insuperables. 100% recomendado para cualquier proyecto serio."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center text-[var(--accent)] font-bold">CR</div>
+                        <div>
+                            <p class="font-medium text-sm">Carlos Ruiz</p>
+                            <p class="text-xs text-[var(--muted)]">Productor Hip-Hop</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal reveal-delay-2 testimonial-card">
+                    <div class="flex items-center gap-1 mb-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <p class="text-[var(--fg)] mb-6 leading-relaxed">"Como banda independiente, encontrar un estudio accesible con esta calidad fue un descubrimiento. Ahora es nuestro lugar fijo."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[var(--accent)]/20 flex items-center justify-center text-[var(--accent)] font-bold">LM</div>
+                        <div>
+                            <p class="font-medium text-sm">La Marea</p>
+                            <p class="text-xs text-[var(--muted)]">Banda Indie</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="estudio" class="py-32">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="reveal inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Conoce el Espacio</span>
+                <h2 class="reveal reveal-delay-1 font-display text-4xl md:text-5xl font-bold">Nuestro Estudio</h2>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Gallery items with placeholder patterns -->
+                <div class="reveal gallery-item aspect-square" data-title="Sala de Control">
+                    <div class="w-full h-full bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] flex items-center justify-center">
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" stroke="var(--accent)" stroke-width="1">
+                            <rect x="10" y="20" width="60" height="40" rx="4"/>
+                            <circle cx="25" cy="40" r="8"/>
+                            <circle cx="55" cy="40" r="8"/>
+                            <rect x="35" y="35" width="10" height="10" rx="2"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="reveal reveal-delay-1 gallery-item aspect-square md:col-span-2 md:row-span-2" data-title="Cabina Principal">
+                    <div class="w-full h-full bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] flex items-center justify-center">
+                        <svg width="120" height="120" viewBox="0 0 120 120" fill="none" stroke="var(--accent)" stroke-width="1">
+                            <rect x="10" y="10" width="100" height="100" rx="8"/>
+                            <circle cx="60" cy="60" r="30"/>
+                            <circle cx="60" cy="60" r="15"/>
+                            <line x1="60" y1="30" x2="60" y2="40"/>
+                            <line x1="60" y1="80" x2="60" y2="90"/>
+                            <line x1="30" y1="60" x2="40" y2="60"/>
+                            <line x1="80" y1="60" x2="90" y2="60"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="reveal reveal-delay-2 gallery-item aspect-square" data-title="Micrófonos">
+                    <div class="w-full h-full bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] flex items-center justify-center">
+                        <svg width="60" height="80" viewBox="0 0 60 80" fill="none" stroke="var(--accent)" stroke-width="1">
+                            <rect x="15" y="5" width="30" height="45" rx="15"/>
+                            <line x1="30" y1="50" x2="30" y2="65"/>
+                            <line x1="15" y1="65" x2="45" y2="65"/>
+                            <rect x="10" y="20" width="40" height="25" rx="2" stroke-dasharray="3 3"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="reveal reveal-delay-3 gallery-item aspect-square" data-title="Consola">
+                    <div class="w-full h-full bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] flex items-center justify-center">
+                        <svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="var(--accent)" stroke-width="1">
+                            <rect x="5" y="10" width="70" height="30" rx="4"/>
+                            <line x1="15" y1="15" x2="15" y2="35"/>
+                            <line x1="25" y1="15" x2="25" y2="35"/>
+                            <line x1="35" y1="15" x2="35" y2="35"/>
+                            <line x1="45" y1="15" x2="45" y2="35"/>
+                            <line x1="55" y1="15" x2="55" y2="35"/>
+                            <line x1="65" y1="15" x2="65" y2="35"/>
+                            <circle cx="15" cy="25" r="3" fill="var(--accent)"/>
+                            <circle cx="35" cy="25" r="3" fill="var(--accent)"/>
+                            <circle cx="55" cy="25" r="3" fill="var(--accent)"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="reveal gallery-item aspect-square" data-title="Instrumentos">
+                    <div class="w-full h-full bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] flex items-center justify-center">
+                        <svg width="60" height="80" viewBox="0 0 60 80" fill="none" stroke="var(--accent)" stroke-width="1">
+                            <ellipse cx="30" cy="65" rx="20" ry="12"/>
+                            <line x1="30" y1="53" x2="30" y2="10"/>
+                            <ellipse cx="30" cy="10" rx="12" ry="8"/>
+                            <circle cx="30" cy="20" r="3"/>
+                            <circle cx="30" cy="30" r="3"/>
+                            <circle cx="30" cy="40" r="3"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="reveal reveal-delay-1 gallery-item aspect-square md:col-span-2" data-title="Sala de Espera">
+                    <div class="w-full h-full bg-gradient-to-br from-[var(--card)] to-[var(--bg-elevated)] flex items-center justify-center">
+                        <svg width="100" height="60" viewBox="0 0 100 60" fill="none" stroke="var(--accent)" stroke-width="1">
+                            <rect x="10" y="20" width="30" height="30" rx="4"/>
+                            <rect x="60" y="20" width="30" height="30" rx="4"/>
+                            <rect x="40" y="25" width="20" height="25" rx="2"/>
+                            <ellipse cx="25" cy="10" rx="8" ry="8"/>
+                            <ellipse cx="75" cy="10" rx="8" ry="8"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipment List -->
+            <div class="mt-16 grid md:grid-cols-3 gap-8">
+                <div class="reveal">
+                    <h4 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="w-8 h-px bg-[var(--accent)]"></span>
+                        Grabación
+                    </h4>
+                    <ul class="space-y-2 text-[var(--muted)]">
+                        <li>Neumann U87 Ai</li>
+                        <li>Shure SM7B</li>
+                        <li>AKG C414 XLII</li>
+                        <li>Audio Interface RME UFX+</li>
+                    </ul>
+                </div>
+                <div class="reveal reveal-delay-1">
+                    <h4 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="w-8 h-px bg-[var(--accent)]"></span>
+                        Monitores
+                    </h4>
+                    <ul class="space-y-2 text-[var(--muted)]">
+                        <li>Genelec 8040B (par)</li>
+                        <li>Yamaha HS8 (par)</li>
+                        <li>Auratone 5C</li>
+                        <li>Sennheiser HD650</li>
+                    </ul>
+                </div>
+                <div class="reveal reveal-delay-2">
+                    <h4 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="w-8 h-px bg-[var(--accent)]"></span>
+                        Software
+                    </h4>
+                    <ul class="space-y-2 text-[var(--muted)]">
+                        <li>Pro Tools Ultimate</li>
+                        <li>Logic Pro X</li>
+                        <li>Waves Mercury Bundle</li>
+                        <li>FabFilter Total Bundle</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contacto" class="py-32 relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--accent)]/5 to-transparent pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 relative">
+            <div class="grid lg:grid-cols-2 gap-16">
+                <!-- Contact Info -->
+                <div class="space-y-8">
+                    <div class="reveal">
+                        <span class="inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Contacto</span>
+                        <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">Reserva tu sesión</h2>
+                        <p class="text-[var(--muted)] text-lg leading-relaxed">
+                            Cuéntanos sobre tu proyecto y te ayudaremos a encontrar el mejor horario. Respondemos en menos de 24 horas.
+                        </p>
+                    </div>
+
+                    <div class="reveal reveal-delay-1 space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-1">Ubicación</h4>
+                                <p class="text-[var(--muted)]">Calle del Sound, 42<br>28001 Madrid, España</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-1">Horario</h4>
+                                <p class="text-[var(--muted)]">Lunes a Viernes: 10:00 - 22:00<br>Fin de semana: Bajo reserva</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-1">Teléfono</h4>
+                                <p class="text-[var(--muted)]">+34 912 345 678</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social links -->
+                    <div class="reveal reveal-delay-2 flex items-center gap-4">
+                        <a href="#" class="w-10 h-10 rounded-lg border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors" aria-label="Instagram">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="2" width="20" height="20" rx="5"/>
+                                <circle cx="12" cy="12" r="4"/>
+                                <circle cx="18" cy="6" r="1" fill="currentColor"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-lg border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors" aria-label="Spotify">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M8 11c3-1 6-.5 8 1"/>
+                                <path d="M7 14c3-1 7-.5 9 1"/>
+                                <path d="M9 8c2.5-.5 5 0 7 1"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-lg border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors" aria-label="YouTube">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="4" width="20" height="16" rx="4"/>
+                                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="reveal">
+                    <form id="contactForm" class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-8 space-y-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium mb-2">Nombre</label>
+                            <input type="text" id="name" name="name" required class="form-input" placeholder="Tu nombre">
+                        </div>
+                        
+                        <div>
+                            <label for="email" class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" id="email" name="email" required class="form-input" placeholder="tu@email.com">
+                        </div>
+                        
+                        <div>
+                            <label for="service" class="block text-sm font-medium mb-2">Tipo de servicio</label>
+                            <select id="service" name="service" class="form-input">
+                                <option value="">Selecciona una opción</option>
+                                <option value="solo">Sin productor (25€/hora)</option>
+                                <option value="producer">Con productor (50€/hora)</option>
+                                <option value="mix">Solo mezcla</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="date" class="block text-sm font-medium mb-2">Fecha preferida</label>
+                                <input type="date" id="date" name="date" class="form-input">
+                            </div>
+                            <div>
+                                <label for="hours" class="block text-sm font-medium mb-2">Horas estimadas</label>
+                                <select id="hours" name="hours" class="form-input">
+                                    <option value="2">2 horas</option>
+                                    <option value="3">3 horas</option>
+                                    <option value="4" selected>4 horas</option>
+                                    <option value="6">6 horas</option>
+                                    <option value="8">8 horas (día completo)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="message" class="block text-sm font-medium mb-2">Cuéntanos sobre tu proyecto</label>
+                            <textarea id="message" name="message" rows="4" class="form-input resize-none" placeholder="¿Qué tipo de música? ¿Cuántas canciones? ¿Referencias?"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary w-full">
+                            Enviar Solicitud
+                        </button>
+                        
+                        <p class="text-xs text-[var(--muted)] text-center">
+                            Te responderemos en menos de 24 horas laborables
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-[var(--border)]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <a href="#" class="font-display text-2xl font-bold tracking-tight">
+                    SONORA<span class="text-[var(--accent)]">.</span>
+                </a>
+                
+                <nav class="flex flex-wrap items-center justify-center gap-6">
+                    <a href="#servicios" class="text-sm text-[var(--muted)] hover:text-[var(--fg)] transition-colors">Servicios</a>
+                    <a href="#productor" class="text-sm text-[var(--muted)] hover:text-[var(--fg)] transition-colors">Productor</a>
+                    <a href="#estudio" class="text-sm text-[var(--muted)] hover:text-[var(--fg)] transition-colors">Estudio</a>
+                    <a href="#contacto" class="text-sm text-[var(--muted)] hover:text-[var(--fg)] transition-colors">Contacto</a>
+                </nav>
+                
+                <p class="text-sm text-[var(--muted)]">
+                    © 2024 Sonora Studio. Todos los derechos reservados.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Visor de imágenes">
+        <button class="absolute top-6 right-6 p-2 text-white hover:text-[var(--accent)] transition-colors" aria-label="Cerrar">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="text-center">
+            <div class="w-96 h-96 bg-[var(--card)] rounded-lg flex items-center justify-center">
+                <p id="lightboxTitle" class="text-xl font-display font-bold text-[var(--accent)]"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables first
+        const menuBtn = document.getElementById('menuBtn');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxTitle = document.getElementById('lightboxTitle');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        const contactForm = document.getElementById('contactForm');
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Mobile menu toggle
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        menuBtn.addEventListener('click', openMobileMenu);
+        closeMenu.addEventListener('click', closeMobileMenu);
+        
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+
+        // Scroll reveal
+        function initScrollReveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            reveals.forEach(el => observer.observe(el));
+        }
+
+        // Lightbox
+        function openLightbox(title) {
+            lightboxTitle.textContent = title;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        galleryItems.forEach(item => {
+            item.addEventListener('click', () => {
+                openLightbox(item.dataset.title || 'Vista del estudio');
+            });
+        });
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox || e.target.closest('button')) {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLightbox();
+                closeMobileMenu();
+            }
+        });
+
+        // Form handling
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(contactForm);
+            const data = Object.fromEntries(formData);
+            
+            // Simple validation
+            if (!data.name || !data.email) {
+                alert('Por favor completa los campos obligatorios.');
+                return;
+            }
+
+            // Simulate submission
+            const btn = contactForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.textContent = '¡Enviado!';
+                btn.style.background = '#22c55e';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                    contactForm.reset();
+                }, 2000);
+            }, 1500);
+        });
+
+        // Navbar background on scroll
+        const nav = document.querySelector('nav');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                nav.style.background = 'rgba(10, 10, 10, 0.95)';
+                nav.style.backdropFilter = 'blur(10px)';
+            } else {
+                nav.style.background = '';
+                nav.style.backdropFilter = '';
+            }
+            
+            lastScroll = currentScroll;
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: prefersReducedMotion ? 'auto' : 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initScrollReveal();
+        });
+    </script>
+</body>
+</html>

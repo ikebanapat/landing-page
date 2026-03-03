@@ -1,0 +1,384 @@
+---
+const stats = [
+  { value: '8+', label: 'Años de experiencia' },
+  { value: '30+', label: 'Proyectos producidos' },
+];
+---
+<section id="inicio" class="min-h-screen flex items-center relative overflow-hidden">
+    <!-- Full-bleed live studio showreel behind the copy (all viewports) -->
+    <div class="hero-bg" aria-hidden="true">
+        <div id="hero-video-bg" class="hero-video hero-video--bg">
+            <div id="hero-yt-player-bg" class="hero-yt-player" aria-hidden="true"></div>
+        </div>
+        <div class="hero-bg-overlay"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 py-24 sm:py-32 relative z-10 w-full">
+        <div class="max-w-3xl mx-auto text-center">
+            <div class="reveal">
+                <span class="inline-block text-[var(--accent)] text-xs sm:text-sm uppercase tracking-[0.3em] font-medium mb-4">Ikebana Pat</span>
+                <h1 class="font-display text-6xl sm:text-7xl md:text-7xl lg:text-8xl font-800 leading-[0.95] tracking-tight">
+                    Producción musical
+                    <span class="text-[var(--accent)]"> con identidad</span>
+                </h1>
+            </div>
+
+            <p class="reveal reveal-delay-1 mt-6 text-base sm:text-lg md:text-xl text-[var(--muted)] max-w-2xl mx-auto leading-relaxed">
+                Producción, mezcla y grabación vocal para artistas.
+            </p>
+
+            <div class="reveal reveal-delay-2 mt-9 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                <a href="#contacto" class="btn-primary text-base w-full sm:w-auto text-center">Reservar</a>
+                <a href="#de-hoy" class="btn-secondary text-base w-full sm:w-auto text-center">Escuchar DE HOY</a>
+            </div>
+
+            <div class="reveal reveal-delay-3 mt-10 flex flex-wrap justify-center gap-8">
+                {stats.map((stat) => (
+                    <div>
+                        <span class="font-display text-2xl sm:text-3xl font-bold text-[var(--accent)]">{stat.value}</span>
+                        <p class="text-sm text-[var(--muted)]">{stat.label}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-audio" aria-label="Control de sonido del video">
+        <button id="hero-audio-toggle" type="button" class="hero-audio-chip" aria-pressed="false">
+            <svg class="hero-audio-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path class="hero-audio-base" d="M11 5 6.5 9H4v6h2.5L11 19V5Z" />
+                <path class="hero-audio-wave hero-audio-wave--1" d="M15 9a4 4 0 0 1 0 6" />
+                <path class="hero-audio-wave hero-audio-wave--2" d="M17.5 7a7 7 0 0 1 0 10" />
+            </svg>
+        </button>
+    </div>
+
+    <a href="#sobre" class="hero-scroll" aria-label="Saber más">
+        <svg class="hero-scroll-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+        </svg>
+    </a>
+</section>
+
+<script>
+    // Hero Showreel (YouTube IFrame API): autoplay muted, pause/resume on view, tap to unmute
+    (() => {
+        const VIDEO_ID = 'WpfqHeAVgfg';
+
+        const bgContainer = document.getElementById('hero-video-bg');
+        const audioToggleBtn = document.getElementById('hero-audio-toggle');
+
+        if (!bgContainer || !audioToggleBtn) return;
+
+        let player = null;
+        let playerReady = false;
+        let initStarted = false;
+        let isVisible = false;
+
+        const loadYouTubeAPI = () => new Promise((resolve) => {
+            if (window.YT && window.YT.Player) return resolve();
+
+            const existing = document.getElementById('youtube-iframe-api');
+            if (existing) {
+                const prev = window.onYouTubeIframeAPIReady;
+                window.onYouTubeIframeAPIReady = () => {
+                    if (typeof prev === 'function') prev();
+                    resolve();
+                };
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.id = 'youtube-iframe-api';
+            script.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(script);
+
+            const prev = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+                if (typeof prev === 'function') prev();
+                resolve();
+            };
+        });
+
+        const ensurePlayer = async () => {
+            if (initStarted) return;
+            initStarted = true;
+
+            await loadYouTubeAPI();
+
+            player = new window.YT.Player('hero-yt-player-bg', {
+                videoId: VIDEO_ID,
+                host: 'https://www.youtube-nocookie.com',
+                playerVars: {
+                    autoplay: 1,
+                    controls: 0,
+                    loop: 1,
+                    playlist: VIDEO_ID,
+                    playsinline: 1,
+                    rel: 0,
+                    modestbranding: 1,
+                    iv_load_policy: 3,
+                    fs: 0,
+                    origin: window.location.origin,
+                },
+                events: {
+                    onReady: (event) => {
+                        playerReady = true;
+                        try { event.target.mute(); } catch {}
+                        setAudioState(false);
+
+                        const iframe = event.target.getIframe();
+                        if (iframe) {
+                            iframe.setAttribute('title', 'Showreel de Ikebana Pat');
+                            iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+                            iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                        }
+
+                        if (isVisible) {
+                            try { event.target.playVideo(); } catch {}
+                        }
+                    },
+                    onStateChange: (event) => {
+                        // Safety net: loop the video when it ends (some embeds ignore loop unless playlist is set)
+                        const ended = (window.YT?.PlayerState?.ENDED ?? 0);
+                        if (event.data !== ended) return;
+                        if (!isVisible) return;
+                        try {
+                            event.target.seekTo(0, true);
+                            event.target.playVideo();
+                        } catch {}
+                    },
+                },
+            });
+        };
+
+        const setAudioState = (isOn) => {
+            audioToggleBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+            audioToggleBtn.classList.toggle('is-on', isOn);
+            const label = isOn ? 'Silenciar' : 'Activar sonido';
+            audioToggleBtn.setAttribute('aria-label', label);
+            audioToggleBtn.setAttribute('title', label);
+        };
+
+        const playIfPossible = () => {
+            if (!player || !playerReady) return;
+            try { player.playVideo(); } catch {}
+        };
+
+        const pauseIfPossible = () => {
+            if (!player || !playerReady) return;
+            try { player.pauseVideo(); } catch {}
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+
+            isVisible = entry.isIntersecting;
+
+            if (isVisible) {
+                ensurePlayer().then(playIfPossible);
+            } else {
+                pauseIfPossible();
+            }
+        }, { threshold: 0.6 });
+
+        observer.observe(bgContainer);
+
+        const toggleAudio = async () => {
+            await ensurePlayer();
+            if (!player || !playerReady) return;
+            try {
+                const isMuted = typeof player.isMuted === 'function' ? player.isMuted() : true;
+                if (isMuted) {
+                    player.unMute();
+                    player.setVolume(100);
+                    player.playVideo();
+                    setAudioState(true);
+                } else {
+                    player.mute();
+                    setAudioState(false);
+                }
+            } catch {}
+        };
+
+        audioToggleBtn.addEventListener('click', toggleAudio);
+        audioToggleBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleAudio();
+            }
+        });
+    })();
+</script>
+
+<style>
+    .hero-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+    }
+
+    .hero-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 60% 50% at 20% 20%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 60%),
+            linear-gradient(
+                to bottom,
+                color-mix(in srgb, var(--bg) 60%, transparent),
+                color-mix(in srgb, var(--bg) 94%, transparent)
+            );
+        pointer-events: none;
+    }
+
+    .hero-video {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .hero-video--bg {
+        position: absolute;
+        inset: 0;
+    }
+
+    .hero-yt-player {
+        position: absolute;
+        inset: 0;
+    }
+
+    /* Full-bleed background: force a 16:9 cover-crop (removes top/bottom bars) */
+    .hero-video--bg :global(iframe) {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border: 0;
+        transform: translate(-50%, -50%);
+        width: 177.78vh;
+        height: 100vh;
+        min-width: 100vw;
+        min-height: 56.25vw;
+        pointer-events: none;
+        filter: saturate(1.05) contrast(1.02);
+    }
+
+    .hero-audio {
+        position: absolute;
+        --hero-audio-inset: clamp(1rem, 3vw, 1.5rem);
+        right: calc(var(--hero-audio-inset) + env(safe-area-inset-right));
+        bottom: calc(var(--hero-audio-inset) + env(safe-area-inset-bottom));
+        z-index: 20;
+        pointer-events: auto;
+    }
+
+    .hero-audio-chip {
+        border: 1px solid var(--border);
+        color: var(--fg);
+        border-radius: 9999px;
+        background: color-mix(in srgb, var(--card) 55%, transparent);
+        transition: all 0.25s ease;
+        backdrop-filter: blur(10px);
+        display: grid;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .hero-audio-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        flex: 0 0 auto;
+    }
+
+    .hero-audio-base,
+    .hero-audio-wave {
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .hero-audio-wave {
+        opacity: 0;
+        transform-origin: center;
+    }
+
+    .hero-audio-chip.is-on {
+        border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+        background: color-mix(in srgb, var(--card) 75%, transparent);
+    }
+
+    .hero-audio-chip.is-on .hero-audio-wave {
+        opacity: 0.9;
+        animation: hero-audio-pulse 900ms ease-in-out infinite;
+    }
+
+    .hero-audio-chip.is-on .hero-audio-wave--2 {
+        animation-delay: 120ms;
+    }
+
+    @keyframes hero-audio-pulse {
+        0%, 100% { opacity: 0.55; }
+        50% { opacity: 1; }
+    }
+
+    .hero-audio-chip:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--card) 85%, transparent);
+    }
+
+    .hero-audio-chip:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    .hero-scroll {
+        position: absolute;
+        left: 50%;
+        bottom: calc(clamp(1.25rem, 3vw, 2rem) + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0;
+        border-radius: 9999px;
+        border: 1px solid var(--border);
+        background: color-mix(in srgb, var(--card) 28%, transparent);
+        color: var(--fg);
+        text-decoration: none;
+        backdrop-filter: blur(10px);
+        transition: all 0.25s ease;
+    }
+
+    .hero-scroll:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--card) 85%, transparent);
+    }
+
+    .hero-scroll:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    .hero-scroll-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        flex: 0 0 auto;
+    }
+
+    .hero-scroll-icon path {
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+</style>

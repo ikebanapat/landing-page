@@ -1,0 +1,87 @@
+---
+interface Service {
+    title: string;
+    description: string;
+    price: string;
+    features: string[];
+    icon: string;
+}
+
+const services: Service[] = [
+    {
+        title: "Producción de Ritmos",
+        description: "Creación de beats originales adaptados a la identidad artística del proyecto. Cada instrumental se construye desde cero buscando textura, atmósfera y carácter.",
+        price: "Consultar",
+        icon: "beats",
+        features: ["Beats originales", "Adaptados a tu estilo", "Textura y atmósfera única"]
+    },
+    {
+        title: "Grabación de Canciones",
+        description: "Dirección vocal y producción en estudio profesional. La sesión no es solo grabar, es capturar el momento correcto.",
+        price: "Consultar",
+        icon: "mic",
+        features: ["Dirección vocal profesional", "Estudio equipado", "Captura del momento"]
+    },
+    {
+        title: "Canción Completa",
+        description: "Desarrollo integral del proyecto: producción instrumental, dirección creativa, grabación vocal, arreglo y supervisión artística.",
+        price: "Consultar",
+        icon: "full",
+        features: ["Producción instrumental", "Dirección creativa", "Grabación y arreglo vocal", "Supervisión artística"]
+    }
+];
+---
+<section id="servicios" class="py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-20">
+            <span class="reveal inline-block text-[var(--accent)] text-sm uppercase tracking-[0.3em] font-medium mb-4">Servicios</span>
+            <h2 class="reveal reveal-delay-1 font-display text-4xl md:text-6xl font-bold">¿Qué necesitas?</h2>
+            <p class="reveal reveal-delay-2 text-[var(--muted)] mt-4 max-w-2xl mx-auto">
+                Elige el servicio que mejor se adapte a tu proyecto. Si no transmite, se transforma.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            {services.map((service, index) => (
+                <div class={`reveal service-card group relative p-8 ${index === 1 ? 'md:-mt-8' : ''}`}>
+                    <div class="w-16 h-16 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center mb-6">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+                            {service.icon === "beats" && (
+                                <path d="M9 18V5l12-2v13M9 9l12-2M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 13a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                            )}
+                            {service.icon === "mic" && (
+                                <><path d="M12 18.5A6.5 6.5 0 1 0 12 5.5a6.5 6.5 0 0 0 0 13Z"/><path d="M12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></>
+                            )}
+                            {service.icon === "full" && (
+                                <><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>
+                            )}
+                        </svg>
+                    </div>
+                    
+                    <span class="text-xs uppercase tracking-wider text-[var(--muted)] mb-2 block">
+                        Servicio {index + 1}
+                    </span>
+                    
+                    <h3 class="font-display text-2xl font-bold mb-3">{service.title}</h3>
+                    <p class="text-[var(--muted)] mb-6 leading-relaxed text-sm">{service.description}</p>
+                    
+                    <ul class="space-y-2 mb-8">
+                        {service.features.map(feature => (
+                            <li class="flex items-center gap-3 text-sm text-[var(--fg)]">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                    <circle cx="8" cy="8" r="7" stroke="var(--accent)" stroke-width="1.5"/>
+                                    <path d="M5 8l2 2 4-4" stroke="var(--accent)" stroke-width="1.5"/>
+                                </svg>
+                                {feature}
+                            </li>
+                        ))}
+                    </ul>
+
+                    <a href="#contacto" class="btn-secondary text-sm py-3 px-6 w-full text-center block">
+                        Solicitar info
+                    </a>
+                </div>
+            ))}
+        </div>
+    </div>
+</section>
