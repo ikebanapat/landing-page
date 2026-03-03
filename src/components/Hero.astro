@@ -230,9 +230,32 @@ const stats = [
 
         // Kickstart autoplay: on iOS autoplay can be blocked depending on settings
         // (e.g. Low Power Mode). A single user gesture reliably allows playback.
-        const kickstart = async () => {
+        const kickstart = async (e) => {
+            // If the user explicitly tapped the audio toggle, let its handler decide.
+            if (e?.target && audioToggleBtn.contains(e.target)) return;
+
             await ensurePlayer();
-            playIfPossible();
+            if (!player || !playerReady) return;
+
+            // If we're already playing, don't force an audio change.
+            try {
+                const playing = (window.YT?.PlayerState?.PLAYING ?? 1);
+                const buffering = (window.YT?.PlayerState?.BUFFERING ?? 3);
+                const state = typeof player.getPlayerState === 'function' ? player.getPlayerState() : null;
+                if (state === playing || state === buffering) return;
+            } catch {}
+
+            // On iOS, when a user gesture is required to start playback,
+            // we take the chance to start WITH sound and keep the UI in sync.
+            userWantsSound = true;
+
+            try {
+                player.unMute();
+                player.setVolume?.(100);
+            } catch {}
+
+            try { player.playVideo(); } catch {}
+            setTimeout(syncAudioUIFromPlayer, 120);
         };
 
         if (isIOS) {
