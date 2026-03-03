@@ -1,14 +1,11 @@
 ---
+import SocialLinks from './SocialLinks.astro';
+
 const about = {
     title: "Sobre Ikebana Pat",
     philosophy: "Ikebana Pat nace del arte japonés del ikebana: la disciplina de unir elementos distintos para crear una composición con equilibrio y carácter propio.",
     approach: "Fusionando géneros urbanos y electrónicos —desde reggaeton, house y afro hasta synthwave y pop— cada producción se construye con una premisa clara: si no transmite, se transforma.",
     goal: "Más que seguir tendencias, el objetivo es encontrar la esencia de cada artista y convertirla en un sonido reconocible.",
-    socials: [
-        { name: "Spotify", url: "https://open.spotify.com/artist/6ENgRzOl5lyD4HavapJ99W?si=K2g0byURTCiOBw9frxmSpQ" },
-        { name: "Instagram", url: "https://www.instagram.com/ikebanapat" },
-        { name: "YouTube", url: "https://www.youtube.com/@IKEBANAPAT" },
-    ]
 };
 ---
 <section id="sobre" class="py-32 relative overflow-hidden">
@@ -42,45 +39,7 @@ const about = {
         <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/artist/6ENgRzOl5lyD4HavapJ99W?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
                 <div class="reveal reveal-delay-3">
                     <p class="text-sm text-[var(--muted)] mb-4">Sígueme en:</p>
-                    <div class="flex gap-3">
-                        {about.socials.map(social => (
-                            <a 
-                                href={social.url}
-                                class="w-10 h-10 rounded-full bg-[var(--card)] border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all"
-                                aria-label={social.name}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {social.name === "Spotify" && (
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                                    </svg>
-                                )}
-                                {social.name === "Instagram" && (
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                        <circle cx="12" cy="12" r="4"></circle>
-                                        <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"></circle>
-                                    </svg>
-                                )}
-                                {social.name === "YouTube" && (
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                    </svg>
-                                )}
-                                {social.name === "BeatStars" && (
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/>
-                                    </svg>
-                                )}
-                                {social.name === "SoundCloud" && (
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.052-.1-.084-.1zm-.899 1.624c-.059 0-.074.025-.082.055l-.193 1.228.193 1.193c.008.033.023.055.066.055.038 0 .058-.022.066-.055l.217-1.193-.217-1.228c-.008-.03-.028-.055-.058-.055zm1.83-1.507c-.059 0-.12.047-.12.1l-.21 2.335.21 2.226c0 .058.054.105.12.105.061 0 .113-.047.12-.105l.233-2.226-.233-2.335c-.007-.053-.059-.1-.12-.1zm.899-.253c-.064 0-.12.053-.12.105l-.198 2.588.198 2.443c0 .058.056.105.12.105.063 0 .116-.047.123-.105l.221-2.443-.221-2.588c-.007-.052-.06-.105-.123-.105zm.914-.076c-.072 0-.132.06-.132.133l-.185 2.664.185 2.519c0 .073.06.133.132.133.073 0 .133-.06.14-.133l.206-2.519-.206-2.664c-.007-.073-.067-.133-.14-.133zm.907-.085c-.08 0-.145.065-.145.145l-.172 2.749.172 2.566c0 .08.065.145.145.145.079 0 .144-.065.152-.145l.192-2.566-.192-2.749c-.008-.08-.073-.145-.152-.145zm.914-.107c-.088 0-.16.072-.16.161l-.16 2.856.16 2.619c0 .089.072.161.16.161.089 0 .161-.072.168-.161l.178-2.619-.178-2.856c-.007-.089-.079-.161-.168-.161zm.907-.131c-.097 0-.175.078-.175.174l-.147 2.987.147 2.683c0 .096.078.174.175.174.096 0 .174-.078.182-.174l.165-2.683-.165-2.987c-.008-.096-.086-.174-.182-.174zm.915-.151c-.105 0-.189.084-.189.188l-.135 3.114.135 2.738c0 .104.084.188.189.188.104 0 .188-.084.196-.188l.15-2.738-.15-3.114c-.008-.104-.092-.188-.196-.188zm.907-.17c-.113 0-.203.09-.203.202l-.122 3.244.122 2.784c0 .112.09.202.203.202.112 0 .202-.09.21-.202l.137-2.784-.137-3.244c-.008-.112-.098-.202-.21-.202zm.914-.19c-.121 0-.218.097-.218.217l-.11 3.371.11 2.822c0 .12.097.217.218.217.12 0 .217-.097.226-.217l.122-2.822-.122-3.371c-.009-.12-.106-.217-.226-.217zm.907-.209c-.13 0-.233.103-.233.231l-.097 3.495.097 2.852c0 .128.103.231.233.231.129 0 .232-.103.24-.231l.108-2.852-.108-3.495c-.008-.128-.111-.231-.24-.231z"/>
-                                    </svg>
-                                )}
-                            </a>
-                        ))}
-                    </div>
+                    <SocialLinks />
                 </div>
             </div>
         </div>
