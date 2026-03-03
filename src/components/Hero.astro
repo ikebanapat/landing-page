@@ -81,6 +81,7 @@ const stats = [
         let playerReady = false;
         let initStarted = false;
         let isVisible = false;
+        let userWantsSound = false;
 
         const loadYouTubeAPI = () => new Promise((resolve) => {
             if (window.YT && window.YT.Player) return resolve();
@@ -133,7 +134,8 @@ const stats = [
                     onReady: (event) => {
                         playerReady = true;
                         try { event.target.mute(); } catch {}
-                        setAudioState(false);
+                        setAudioUI(false);
+                        userWantsSound = false;
 
                         const iframe = event.target.getIframe();
                         if (iframe) {
@@ -143,18 +145,19 @@ const stats = [
                         }
 
                         if (isVisible) {
-                            // iOS Safari can be picky: ensure we're muted before attempting playback.
-                            try { event.target.mute(); } catch {}
-                            try { event.target.playVideo(); } catch {}
-                            setTimeout(() => {
-                                if (!isVisible) return;
-                                try { event.target.playVideo(); } catch {}
-                            }, 200);
+                            playIfPossible();
                         }
                     },
                     onStateChange: (event) => {
                         // Safety net: loop the video when it ends (some embeds ignore loop unless playlist is set)
                         const ended = (window.YT?.PlayerState?.ENDED ?? 0);
+                        const playing = (window.YT?.PlayerState?.PLAYING ?? 1);
+
+                        if (event.data === playing) {
+                            // iOS can silently re-mute on resume; keep the UI honest.
+                            setTimeout(syncAudioUIFromPlayer, 120);
+                        }
+
                         if (event.data !== ended) return;
                         if (!isVisible) return;
                         try {
@@ -166,7 +169,7 @@ const stats = [
             });
         };
 
-        const setAudioState = (isOn) => {
+        const setAudioUI = (isOn) => {
             audioToggleBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
             audioToggleBtn.classList.toggle('is-on', isOn);
             const label = isOn ? 'Silenciar' : 'Activar sonido';
@@ -174,10 +177,35 @@ const stats = [
             audioToggleBtn.setAttribute('title', label);
         };
 
+        const syncAudioUIFromPlayer = () => {
+            if (!player || !playerReady) return;
+            try {
+                const muted = typeof player.isMuted === 'function' ? player.isMuted() : true;
+                setAudioUI(!muted);
+            } catch {
+                // If we can't read state, fall back to the safest UI (muted)
+                setAudioUI(false);
+            }
+        };
+
+        const applyDesiredAudioState = () => {
+            if (!player || !playerReady) return;
+            try {
+                if (userWantsSound) {
+                    player.unMute();
+                    player.setVolume?.(100);
+                } else {
+                    player.mute();
+                }
+            } catch {}
+        };
+
         const playIfPossible = () => {
             if (!player || !playerReady) return;
-            try { player.mute(); } catch {}
+            applyDesiredAudioState();
             try { player.playVideo(); } catch {}
+            // Give iOS a moment; then reflect the real audio state in the button.
+            setTimeout(syncAudioUIFromPlayer, 180);
         };
 
         const pauseIfPossible = () => {
@@ -227,15 +255,20 @@ const stats = [
             try {
                 const isMuted = typeof player.isMuted === 'function' ? player.isMuted() : true;
                 if (isMuted) {
+                    userWantsSound = true;
                     player.unMute();
                     player.setVolume(100);
                     player.playVideo();
-                    setAudioState(true);
+                    setAudioUI(true);
                 } else {
+                    userWantsSound = false;
                     player.mute();
-                    setAudioState(false);
+                    setAudioUI(false);
                 }
             } catch {}
+
+            // Re-check: some iOS resumes can still force mute.
+            setTimeout(syncAudioUIFromPlayer, 120);
         };
 
         audioToggleBtn.addEventListener('click', toggleAudio);
