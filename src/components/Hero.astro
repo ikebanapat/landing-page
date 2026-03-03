@@ -70,6 +70,13 @@ const stats = [
 
         if (!bgContainer || !audioToggleBtn) return;
 
+        const isIOS = (() => {
+            const ua = navigator.userAgent || '';
+            const iOSUA = /iP(hone|od|ad)/.test(ua);
+            const iPadOS = navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+            return iOSUA || iPadOS;
+        })();
+
         let player = null;
         let playerReady = false;
         let initStarted = false;
@@ -111,6 +118,7 @@ const stats = [
                 host: 'https://www.youtube-nocookie.com',
                 playerVars: {
                     autoplay: 1,
+                    mute: 1,
                     controls: 0,
                     loop: 1,
                     playlist: VIDEO_ID,
@@ -135,7 +143,13 @@ const stats = [
                         }
 
                         if (isVisible) {
+                            // iOS Safari can be picky: ensure we're muted before attempting playback.
+                            try { event.target.mute(); } catch {}
                             try { event.target.playVideo(); } catch {}
+                            setTimeout(() => {
+                                if (!isVisible) return;
+                                try { event.target.playVideo(); } catch {}
+                            }, 200);
                         }
                     },
                     onStateChange: (event) => {
@@ -162,6 +176,7 @@ const stats = [
 
         const playIfPossible = () => {
             if (!player || !playerReady) return;
+            try { player.mute(); } catch {}
             try { player.playVideo(); } catch {}
         };
 
@@ -184,6 +199,27 @@ const stats = [
         }, { threshold: 0.6 });
 
         observer.observe(bgContainer);
+
+        // Kickstart autoplay: on iOS autoplay can be blocked depending on settings
+        // (e.g. Low Power Mode). A single user gesture reliably allows playback.
+        const kickstart = async () => {
+            await ensurePlayer();
+            playIfPossible();
+        };
+
+        if (isIOS) {
+            window.addEventListener('pointerdown', kickstart, { passive: true, once: true, capture: true });
+            window.addEventListener('touchstart', kickstart, { passive: true, once: true, capture: true });
+        }
+
+        // Start immediately if the hero is already on-screen (don’t wait for IO timing).
+        try {
+            const rect = bgContainer.getBoundingClientRect();
+            isVisible = rect.bottom > 0 && rect.top < (window.innerHeight || document.documentElement.clientHeight);
+        } catch {}
+        if (isVisible) {
+            ensurePlayer().then(playIfPossible);
+        }
 
         const toggleAudio = async () => {
             await ensurePlayer();
